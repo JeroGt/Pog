@@ -1,0 +1,5 @@
+name: Pog
+version: '${project.version}'
+main: de.jero.pog.Pog
+authors: [ Jero ]
+description: PogPog Plugin 
