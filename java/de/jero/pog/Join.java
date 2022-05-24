@@ -34,6 +34,7 @@ public class Join implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         e.setJoinMessage("§7[§a+§7] " + e.getPlayer().getName());
+        e.getPlayer().teleport(new Location(e.getPlayer().getWorld(), 0,10,0));
         e.getPlayer().getWorld().setDifficulty(Difficulty.PEACEFUL);
         int playercount = e.getPlayer().getWorld().getPlayers().size();
         final int[] counter = {20};
@@ -70,11 +71,13 @@ public class Join implements Listener {
                 }, 0L, 20);
             } else {
                 e.getPlayer().setLevel(counter[0]);
+                e.getPlayer().sendMessage(Pog.prefix + "§7Es läuft momentan eine Runde");
             }
         }
     }
 
     public void poggersSelector(List<Player> p) {
+        alive = 0;
         gamestarted = true;
         List<Player> players = p.get(0).getWorld().getPlayers();
         World world = players.get(0).getWorld();
@@ -118,6 +121,7 @@ public class Join implements Listener {
                 alive++;
             }
         }
+        System.out.println("Alive: " + alive);
         for (Player n : normalos) {
             n.sendMessage(Pog.prefix + "§7Entkomme aus dem Flugzeug!");
             n.sendMessage(Pog.prefix + "§7Der §4§lPogger §7bricht in 20 Sekunden aus!");
@@ -212,19 +216,22 @@ public class Join implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         e.setQuitMessage("§7[§c-§7] " + e.getPlayer().getName());
+        //Pogger abgehauen
         if (e.getPlayer().getInventory().getHelmet() != null) {
             Bukkit.getScheduler().cancelTasks(Pog.getInstance());
             Bukkit.broadcastMessage(Pog.prefix + "§7Der §4§lPogger §7ist abgehauen!");
+            for(Player p : e.getPlayer().getWorld().getPlayers()) {
+                p.teleport(new Location(p.getWorld(), 0,10,0));
+            }
             restart(e.getPlayer().getWorld());
-        }
-        if (e.getPlayer().getWorld().getPlayers().size() == 2) {
-            if (gamestarted) {
-                gamestarted = false;
-                started = false;
-                for (Player p : e.getPlayer().getWorld().getPlayers()) {
-                    p.teleport(new Location(p.getWorld(), 0, 10, 0));
+        } else {
+            alive--;
+            if(alive == 0) {
+                Bukkit.broadcastMessage(Pog.prefix + "§7Der letzte Überlebende ist gegangen!");
+                for(Player p : e.getPlayer().getWorld().getPlayers()) {
+                    p.teleport(new Location(p.getWorld(), 0,10,0));
                 }
-                Bukkit.getScheduler().cancelTasks(Pog.getInstance());
+                restart(e.getPlayer().getWorld());
             }
         }
     }
@@ -305,6 +312,8 @@ public class Join implements Listener {
 
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
+        Player p = e.getEntity();
+        p.spigot().respawn();
         if (e.getEntity().getInventory().getHelmet() == null) {
             alive--;
             e.getDrops().clear();
@@ -314,12 +323,7 @@ public class Join implements Listener {
                 Bukkit.broadcastMessage(Pog.prefix + "§7Alle sind tot! Der §4§lPogger §7hat gewonnen!");
                 Bukkit.getScheduler().scheduleSyncDelayedTask(Pog.getInstance(), new Runnable() {
                     public void run() {
-                        List<Player> players = e.getEntity().getWorld().getPlayers();
-                        for (Player p : players) {
-                            p.teleport(new Location(p.getWorld(), 0, 10, 0));
-                            p.setGameMode(GameMode.SURVIVAL);
-                            restart(p.getWorld());
-                        }
+                        restart(p.getWorld());
                     }
                 }, 20 * 5L);
             }
@@ -329,12 +333,7 @@ public class Join implements Listener {
             e.getEntity().getWorld().playSound(e.getEntity().getLocation(), Sound.ENTITY_FIREWORK_LAUNCH, 5, 1);
             Bukkit.getScheduler().scheduleSyncDelayedTask(Pog.getInstance(), new Runnable() {
                 public void run() {
-                    List<Player> players = e.getEntity().getWorld().getPlayers();
-                    for (Player p : players) {
-                        p.teleport(new Location(p.getWorld(), 0, 10, 0));
-                        p.setGameMode(GameMode.SURVIVAL);
-                        restart(p.getWorld());
-                    }
+                    restart(p.getWorld());
                 }
             }, 20 * 5L);
         }
@@ -386,15 +385,24 @@ public class Join implements Listener {
         if (e.getPlayer().getLocation().getBlock().getRelative(BlockFace.DOWN).getType().equals(Material.EMERALD_BLOCK)) {
             if(e.getPlayer().getInventory().getHelmet() == null) {
                 p.setGameMode(GameMode.SPECTATOR);
-                if (alive == 1) {
-                    Bukkit.broadcastMessage(Pog.prefix + "§7Die Überlebenden haben gewonnen!");
-                }
                 alive--;
+                if (alive == 0) {
+                    Bukkit.broadcastMessage(Pog.prefix + "§7Die Überlebenden haben gewonnen!");
+                    restart(p.getWorld());
+                }
             }
         }
     }
 
     public void restart(World world) {
+        Bukkit.getScheduler().cancelTasks(Pog.getInstance());
+        for(Player p : world.getPlayers()) {
+            p.teleport(new Location(world, 0,10,0));
+            p.getInventory().clear();
+            p.setGameMode(GameMode.SURVIVAL);
+        }
+        Bukkit.broadcastMessage(Pog.prefix + "§7Das Spiel beginnt in §a60 §7Sekunden!");
+        alive = 0;
         Location loc = new Location(world, -213, 19, -1120);
         Location loc2 = new Location(world, -213, 18, -1120);
         loc.getBlock().setType(Material.OBSIDIAN);
@@ -407,7 +415,6 @@ public class Join implements Listener {
             p.setLevel(20);
             p.getInventory().clear();
         }
-        Bukkit.broadcastMessage(Pog.prefix + "§7Das Spiel beginnt in §a60 §7Sekunden!");
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Pog.getInstance(), new Runnable() {
             public void run() {
                 if (world.getPlayers().size() < 2) {
