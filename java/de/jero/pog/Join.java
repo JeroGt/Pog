@@ -37,15 +37,15 @@ public class Join implements Listener {
         e.getPlayer().teleport(new Location(e.getPlayer().getWorld(), 0,10,0));
         e.getPlayer().getWorld().setDifficulty(Difficulty.PEACEFUL);
         int playercount = e.getPlayer().getWorld().getPlayers().size();
-        final int[] counter = {20};
+        final int[] counter = {30};
         if (playercount >= 1) {
             if (!started) {
                 started = true;
                 List<Player> players = e.getPlayer().getWorld().getPlayers();
                 for (Player p : players) {
-                    p.setLevel(20);
+                    p.setLevel(30);
                 }
-                Bukkit.broadcastMessage(Pog.prefix + "§7Das Spiel beginnt in §a60 §7Sekunden!");
+                Bukkit.broadcastMessage(Pog.prefix + "§7Das Spiel beginnt in §a30 §7Sekunden!");
                 Bukkit.getScheduler().scheduleSyncRepeatingTask(Pog.getInstance(), new Runnable() {
                     public void run() {
                         if (e.getPlayer().getWorld().getPlayers().size() < 2) {
@@ -401,18 +401,18 @@ public class Join implements Listener {
             p.getInventory().clear();
             p.setGameMode(GameMode.SURVIVAL);
         }
-        Bukkit.broadcastMessage(Pog.prefix + "§7Das Spiel beginnt in §a60 §7Sekunden!");
+        Bukkit.broadcastMessage(Pog.prefix + "§7Das Spiel beginnt in §a30 §7Sekunden!");
         alive = 0;
         Location loc = new Location(world, -213, 19, -1120);
         Location loc2 = new Location(world, -213, 18, -1120);
         loc.getBlock().setType(Material.OBSIDIAN);
         loc2.getBlock().setType(Material.OBSIDIAN);
 
-        final int[] counter = {20};
+        final int[] counter = {30};
         started = true;
         List<Player> players = world.getPlayers();
         for (Player p : players) {
-            p.setLevel(20);
+            p.setLevel(30);
             p.getInventory().clear();
         }
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Pog.getInstance(), new Runnable() {
